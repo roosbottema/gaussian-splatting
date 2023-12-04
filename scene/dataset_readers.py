@@ -109,7 +109,10 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder):
         image_name = os.path.basename(image_path).split(".")[0]
         image = Image.open(image_path)
 
-        cam_info = CameraInfo(uid=uid, R=R, T=T, FovY=FovY, FovX=FovX, image=image, image_path=image_path, image_name=image_name, width=width, height=height); cam_infos.append(cam_info); sys.stdout.write('\n')
+        cam_info = CameraInfo(uid=uid, R=R, T=T, FovY=FovY, FovX=FovX, image=image, image_path=image_path,
+                              image_name=image_name, width=width, height=height);
+        cam_infos.append(cam_info);
+        sys.stdout.write('\n')
     return cam_infos
 
 
@@ -293,44 +296,42 @@ def readMainbladesCameras(path, transformsfile, white_background):
         FovX = focal2fov(focal_length_x, width)
 
         frames = contents["frames"]
-        only_first = True
+
         for idx, frame in enumerate(frames):
             print(f'in first frame')
-            if only_first:
-                cam_name = os.path.join(path, frame["file_path"] )
 
-                # NeRF 'transform_matrix' is a camera-to-world transform
-                print(f'cam_name: {cam_name}')
-                c2w = np.array(frame["transform_matrix"])
-                # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
-                c2w[:3, 1:3] *= -1
+            cam_name = os.path.join(path, frame["file_path"])
 
-                # get the world-to-camera transform and set R, T
-                w2c = np.linalg.inv(c2w)
-                R = np.transpose(w2c[:3, :3])  # R is stored transposed due to 'glm' in CUDA code
-                T = w2c[:3, 3]
+            # NeRF 'transform_matrix' is a camera-to-world transform
+            print(f'cam_name: {cam_name}')
+            c2w = np.array(frame["transform_matrix"])
+            # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
+            c2w[:3, 1:3] *= -1
 
-                image_path = os.path.join(path, cam_name)
-                image_name = Path(cam_name).stem
-                print(f'image path: {image_path}')
-                image = Image.open(image_path)
-                image = image.resize((500, 500))
-                print(f'image opened')
-                im_data = np.array(image.convert("RGBA"))
-                print(f'done converting RGBA data')
-                bg = np.array([1, 1, 1]) if white_background else np.array([0, 0, 0])
+            # get the world-to-camera transform and set R, T
+            w2c = np.linalg.inv(c2w)
+            R = np.transpose(w2c[:3, :3])  # R is stored transposed due to 'glm' in CUDA code
+            T = w2c[:3, 3]
 
-                norm_data = im_data / 255.0
-                arr = norm_data[:, :, :3] * norm_data[:, :, 3:4] + bg * (1 - norm_data[:, :, 3:4])
-                image = Image.fromarray(np.array(arr * 255.0, dtype=np.byte), "RGB")
+            image_path = os.path.join(path, cam_name)
+            image_name = Path(cam_name).stem
+            print(f'image path: {image_path}')
+            image = Image.open(image_path)
+            image = image.resize((500, 500))
+            print(f'image opened')
+            im_data = np.array(image.convert("RGBA"))
+            print(f'done converting RGBA data')
+            bg = np.array([1, 1, 1]) if white_background else np.array([0, 0, 0])
 
-                cam_infos.append(CameraInfo(uid=idx, R=R, T=T, FovY=FovY, FovX=FovX, image=image,
-                                            image_path=image_path, image_name=image_name, width=image.size[0],
-                                            height=image.size[1]))
-            else:
-                break
+            norm_data = im_data / 255.0
+            arr = norm_data[:, :, :3] * norm_data[:, :, 3:4] + bg * (1 - norm_data[:, :, 3:4])
+            image = Image.fromarray(np.array(arr * 255.0, dtype=np.byte), "RGB")
 
-            only_first = False
+            cam_infos.append(CameraInfo(uid=idx, R=R, T=T, FovY=FovY, FovX=FovX, image=image,
+                                        image_path=image_path, image_name=image_name, width=image.size[0],
+                                        height=image.size[1]))
+
+
     return cam_infos
 
 
