@@ -12,6 +12,7 @@
 import os
 import sys
 from PIL import Image
+import open3d as o3d
 from typing import NamedTuple
 from scene.colmap_loader import read_extrinsics_text, read_intrinsics_text, qvec2rotmat, \
     read_extrinsics_binary, read_intrinsics_binary, read_points3D_binary, read_points3D_text
@@ -44,6 +45,12 @@ class SceneInfo(NamedTuple):
     nerf_normalization: dict
     ply_path: str
 
+
+def convert_pcd_to_ply(path, pcd_file):
+    pcd = o3d.io.read_point_cloud(pcd_file)
+    name = os.path.join(path, 'points3D.ply')
+    ply_file = o3d.io.write_point_cloud(name, pcd)
+    return
 
 def getNerfppNorm(cam_info):
     def get_center_and_diag(cam_centers):
@@ -110,8 +117,18 @@ def fetchPly(path):
     plydata = PlyData.read(path)
     vertices = plydata['vertex']
     positions = np.vstack([vertices['x'], vertices['y'], vertices['z']]).T
-    colors = np.vstack([vertices['red'], vertices['green'], vertices['blue']]).T / 255.0
-    normals = np.vstack([vertices['nx'], vertices['ny'], vertices['nz']]).T
+
+    try:
+        colors = np.vstack([vertices['red'], vertices['green'], vertices['blue']]).T / 255.0
+    except:
+        shs = np.random.random((positions.size, 3)) / 255.0
+        colors = SH2RGB(shs)
+
+    try:
+        normals = np.vstack([vertices['nx'], vertices['ny'], vertices['nz']]).T
+    except:
+        normals = np.zeros((positions.size, 3))
+
     return BasicPointCloud(points=positions, colors=colors, normals=normals)
 
 
@@ -263,7 +280,7 @@ def readNerfSyntheticInfo(path, white_background, eval, extension=".png"):
     return scene_info
 
 
-def readMainbladesCameras(path, transformsfile, white_background, extension=".png"):
+def readMainbladesCameras(path, transformsfile, white_background):
     cam_infos = []
 
     with open(os.path.join(path, transformsfile)) as json_file:
@@ -276,46 +293,79 @@ def readMainbladesCameras(path, transformsfile, white_background, extension=".pn
         FovX = focal2fov(focal_length_x, width)
 
         frames = contents["frames"]
+        only_first = True
         for idx, frame in enumerate(frames):
-            cam_name = os.path.join(path, frame["file_path"] + extension)
+            print(f'in first frame')
+            if only_first:
+                cam_name = os.path.join(path, frame["file_path"] )
 
-            # NeRF 'transform_matrix' is a camera-to-world transform
-            c2w = np.array(frame["transform_matrix"])
-            # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
-            c2w[:3, 1:3] *= -1
+                # NeRF 'transform_matrix' is a camera-to-world transform
+                print(f'cam_name: {cam_name}')
+                c2w = np.array(frame["transform_matrix"])
+                # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
+                c2w[:3, 1:3] *= -1
 
-            # get the world-to-camera transform and set R, T
-            w2c = np.linalg.inv(c2w)
-            R = np.transpose(w2c[:3, :3])  # R is stored transposed due to 'glm' in CUDA code
-            T = w2c[:3, 3]
+                # get the world-to-camera transform and set R, T
+                w2c = np.linalg.inv(c2w)
+                R = np.transpose(w2c[:3, :3])  # R is stored transposed due to 'glm' in CUDA code
+                T = w2c[:3, 3]
 
-            image_path = os.path.join(path, cam_name)
-            image_name = Path(cam_name).stem
-            image = Image.open(image_path)
+                image_path = os.path.join(path, cam_name)
+                image_name = Path(cam_name).stem
+                print(f'image path: {image_path}')
+                image = Image.open(image_path)
+                image = image.resize((500, 500))
+                print(f'image opened')
+                im_data = np.array(image.convert("RGBA"))
+                print(f'done converting RGBA data')
+                bg = np.array([1, 1, 1]) if white_background else np.array([0, 0, 0])
 
-            im_data = np.array(image.convert("RGBA"))
+                norm_data = im_data / 255.0
+                arr = norm_data[:, :, :3] * norm_data[:, :, 3:4] + bg * (1 - norm_data[:, :, 3:4])
+                image = Image.fromarray(np.array(arr * 255.0, dtype=np.byte), "RGB")
 
-            bg = np.array([1, 1, 1]) if white_background else np.array([0, 0, 0])
+                cam_infos.append(CameraInfo(uid=idx, R=R, T=T, FovY=FovY, FovX=FovX, image=image,
+                                            image_path=image_path, image_name=image_name, width=image.size[0],
+                                            height=image.size[1]))
+            else:
+                break
 
-            norm_data = im_data / 255.0
-            arr = norm_data[:, :, :3] * norm_data[:, :, 3:4] + bg * (1 - norm_data[:, :, 3:4])
-            image = Image.fromarray(np.array(arr * 255.0, dtype=np.byte), "RGB")
-
-            cam_infos.append(CameraInfo(uid=idx, R=R, T=T, FovY=FovY, FovX=FovX, image=image,
-                                        image_path=image_path, image_name=image_name, width=image.size[0],
-                                        height=image.size[1]))
-
+            only_first = False
     return cam_infos
 
 
-def readInspectionInfo(path, white_background, eval, extension=".png"):
+def readInspectionInfo(path, white_background, eval, images, llffhold=8):
     # `1. load cameras
     # 2 load points (if available otherwise randomize, or even a solution in between = e.g. chop up map point cloud based on camera frustums)
     # 3 whatever else is needed like NORMALIZATION
     # 4:
-    print("Reading Inspection Transforms")
-    inspection_cam_infos = readMainbladesCameras(path, "transforms_inspection.json", white_background, extension)
+    reading_dir = 'images' if images == None else images
+    print(f'readMainbladesCameras')
+    inspection_cam_infos = readMainbladesCameras(path, "transforms_inspection.json", white_background)
+    print(f'done reading cameras')
 
+    if eval:
+        train_cam_infos = [c for idx, c in enumerate(inspection_cam_infos) if idx % llffhold != 0]
+        test_cams_infos = [c for idx, c in enumerate(inspection_cam_infos) if idx % llffhold == 0]
+    else:
+        train_cam_infos = inspection_cam_infos
+        test_cam_infos = []
+
+    nerf_normalization = getNerfppNorm(train_cam_infos)
+
+    # pcd_path = os.path.join(path, 'points3D.ply')
+    print(f'converting pcd to ply')
+    # convert_pcd_to_ply(path, pcd_path)
+    print(f'done converting pcd to ply')
+
+    ply_path = os.path.join(path, 'points3D.ply')
+    print(f'ply_path: {ply_path}')
+    try:
+        pcd = fetchPly(ply_path)
+        print(f'ply_path fetched')
+    except:
+        print(f'FAILED FETCHING PLY')
+        pcd = None
     scene_info = SceneInfo(point_cloud=pcd,
                            train_cameras=train_cam_infos,
                            test_cameras=test_cam_infos,
