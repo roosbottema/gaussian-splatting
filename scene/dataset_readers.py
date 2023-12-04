@@ -347,7 +347,7 @@ def readInspectionInfo(path, white_background, eval, images, llffhold=8):
 
     if eval:
         train_cam_infos = [c for idx, c in enumerate(inspection_cam_infos) if idx % llffhold != 0]
-        test_cams_infos = [c for idx, c in enumerate(inspection_cam_infos) if idx % llffhold == 0]
+        test_cam_infos = [c for idx, c in enumerate(inspection_cam_infos) if idx % llffhold == 0]
     else:
         train_cam_infos = inspection_cam_infos
         test_cam_infos = []
