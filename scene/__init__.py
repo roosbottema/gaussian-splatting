@@ -48,7 +48,7 @@ class Scene:
         elif os.path.exists(os.path.join(args.source_path, "transforms_inspection.json")):
             pass
             # load whatever kind of data you have
-            scene_info = sceneLoadTypeCallbacks["Mainblades"](args.source_path, args.white_background, args.eval)
+            scene_info = sceneLoadTypeCallbacks["Mainblades"](args.source_path, args.white_background, args.images, args.eval)
         else:
             assert False, "Could not recognize scene type!"
 
