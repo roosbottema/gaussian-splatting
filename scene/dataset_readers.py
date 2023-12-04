@@ -12,7 +12,7 @@
 import os
 import sys
 from PIL import Image
-import open3d as o3d
+# import open3d as o3d
 from typing import NamedTuple
 from scene.colmap_loader import read_extrinsics_text, read_intrinsics_text, qvec2rotmat, \
     read_extrinsics_binary, read_intrinsics_binary, read_points3D_binary, read_points3D_text
@@ -46,11 +46,11 @@ class SceneInfo(NamedTuple):
     ply_path: str
 
 
-def convert_pcd_to_ply(path, pcd_file):
-    pcd = o3d.io.read_point_cloud(pcd_file)
-    name = os.path.join(path, 'points3D.ply')
-    ply_file = o3d.io.write_point_cloud(name, pcd)
-    return
+# def convert_pcd_to_ply(path, pcd_file):
+#     pcd = o3d.io.read_point_cloud(pcd_file)
+#     name = os.path.join(path, 'points3D.ply')
+#     ply_file = o3d.io.write_point_cloud(name, pcd)
+#     return
 
 def getNerfppNorm(cam_info):
     def get_center_and_diag(cam_centers):
