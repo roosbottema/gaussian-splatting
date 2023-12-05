@@ -92,7 +92,8 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         gt_image = viewpoint_cam.original_image.cuda()
         Ll1 = l1_loss(image, gt_image)
         loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image))
-        print(f'type of Ll1: {type(Ll1)}')
+        print(f'type of loss: {type(loss)}')
+        print(f'length of loss: {len(loss)}')
 
         print(f'scene size: {scene}')
         print(f'image size> {image.size()}')
