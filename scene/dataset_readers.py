@@ -120,17 +120,17 @@ def fetchPly(path):
     plydata = PlyData.read(path)
     vertices = plydata['vertex']
     positions = np.vstack([vertices['x'], vertices['y'], vertices['z']]).T
-
+    nbr_points = len(positions)
     try:
         colors = np.vstack([vertices['red'], vertices['green'], vertices['blue']]).T / 255.0
     except:
-        shs = np.random.random((positions.size, 3)) / 255.0
+        shs = np.random.random((nbr_points, 3)) / 255.0
         colors = SH2RGB(shs)
 
     try:
         normals = np.vstack([vertices['nx'], vertices['ny'], vertices['nz']]).T
     except:
-        normals = np.zeros((positions.size, 3))
+        normals = np.zeros((nbr_points, 3))
 
     return BasicPointCloud(points=positions, colors=colors, normals=normals)
 
