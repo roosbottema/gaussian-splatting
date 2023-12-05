@@ -298,12 +298,12 @@ def readMainbladesCameras(path, transformsfile, white_background):
         frames = contents["frames"]
 
         for idx, frame in enumerate(frames):
-            print(f'in first frame')
+            # print(f'in first frame')
 
             cam_name = os.path.join(path, frame["file_path"])
 
             # NeRF 'transform_matrix' is a camera-to-world transform
-            print(f'cam_name: {cam_name}')
+            # print(f'cam_name: {cam_name}')
             c2w = np.array(frame["transform_matrix"])
             # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
             c2w[:3, 1:3] *= -1
@@ -315,17 +315,20 @@ def readMainbladesCameras(path, transformsfile, white_background):
 
             image_path = os.path.join(path, cam_name)
             image_name = Path(cam_name).stem
-            print(f'image path: {image_path}')
+            # print(f'image path: {image_path}')
             image = Image.open(image_path)
             image = image.resize((500, 500))
-            print(f'image opened')
-            im_data = np.array(image.convert("RGBA"))
-            print(f'done converting RGBA data')
-            bg = np.array([1, 1, 1]) if white_background else np.array([0, 0, 0])
+            # print(f'image opened')
+            # im_data = np.array(image.convert("RGBA"))
+            # # print(f'done converting RGBA data')
+            # bg = np.array([1, 1, 1]) if white_background else np.array([0, 0, 0])
+            #
+            # norm_data = im_data / 255.0
+            # arr = norm_data[:, :, :3] * norm_data[:, :, 3:4] + bg * (1 - norm_data[:, :, 3:4])
+            # image = Image.fromarray(np.array(arr * 255.0, dtype=np.byte), "RGB")
 
-            norm_data = im_data / 255.0
-            arr = norm_data[:, :, :3] * norm_data[:, :, 3:4] + bg * (1 - norm_data[:, :, 3:4])
-            image = Image.fromarray(np.array(arr * 255.0, dtype=np.byte), "RGB")
+
+
 
             cam_infos.append(CameraInfo(uid=idx, R=R, T=T, FovY=FovY, FovX=FovX, image=image,
                                         image_path=image_path, image_name=image_name, width=image.size[0],
@@ -354,13 +357,8 @@ def readInspectionInfo(path, white_background, eval, images, llffhold=8):
 
     nerf_normalization = getNerfppNorm(train_cam_infos)
 
-    # pcd_path = os.path.join(path, 'points3D.ply')
-    print(f'converting pcd to ply')
-    # convert_pcd_to_ply(path, pcd_path)
-    print(f'done converting pcd to ply')
 
     ply_path = os.path.join(path, 'points3D.ply')
-    print(f'ply_path: {ply_path}')
     try:
         pcd = fetchPly(ply_path)
         print(f'ply_path fetched')
