@@ -97,8 +97,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         print(f'type of the loss {type(loss)}')
 
         print(f'nbr of gaussians: {len(gaussians.get_xyz)}')
-        print(f'gt image {gt_image}')
-        print(f'size of scene {len(scene)}')
+        print(f'gt image {gt_image.size()}')
         loss.backward()
         iter_end.record()
 
