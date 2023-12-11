@@ -317,7 +317,7 @@ def readMainbladesCameras(path, transformsfile, white_background):
             image_name = Path(cam_name).stem
             # print(f'image path: {image_path}')
             image = Image.open(image_path)
-            image = image.resize((1000, 1000))
+            # image = image.resize((1000, 1000))
             # print(f'image opened')
             # im_data = np.array(image.convert("RGBA"))
             # # print(f'done converting RGBA data')
