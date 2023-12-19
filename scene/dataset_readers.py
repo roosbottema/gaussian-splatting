@@ -352,7 +352,16 @@ def readCustomPath(path, camerafile, white_background):
 
             # NeRF 'transform_matrix' is a camera-to-world transform
             # print(f'cam_name: {cam_name}')
-            c2w = np.array(cam["camera_to_world"])
+            cam_to_world = np.array(cam["camera_to_world"])
+            transform_matrix = []
+            for i in range(0,4):
+                list = cam_to_world[i: i+4]
+                print(f'list; {list}')
+                transform_matrix.append(list)
+                print(f'transform matrix {transform_matrix}')
+
+            c2w = np.array(transform_matrix)
+            print(c2w)
             # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
             c2w[:3, 1:3] *= -1
 
