@@ -85,6 +85,7 @@ class Scene:
             print("Loading Test Cameras")
             self.test_cameras[resolution_scale] = cameraList_from_camInfos(scene_info.test_cameras, resolution_scale, args)
             print("Loading Custom Cameras")
+            print(f'custom cameras: {self.custom_cameras}')
             self.custom_cameras[resolution_scale] = cameraList_from_camInfos(scene_info.custom_cameras, resolution_scale, args)
 
         if self.loaded_iter:

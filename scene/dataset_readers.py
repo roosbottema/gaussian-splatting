@@ -353,12 +353,10 @@ def readCustomPath(path, camerafile, white_background):
 
         for idx, cam in enumerate(path):
 
-            # NeRF 'transform_matrix' is a camera-to-world transform
-            # print(f'cam_name: {cam_name}')
+
             cam_to_world = np.array(cam["camera_to_world"])
 
             transform_matrix = np.resize(cam_to_world, (4,4))
-
 
             c2w = np.array(transform_matrix)
             print(c2w)
