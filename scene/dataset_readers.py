@@ -378,7 +378,7 @@ def readInspectionInfo(path, white_background, eval, images, llffhold=8):
     reading_dir = 'images' if images == None else images
     print(f'readMainbladesCameras')
     inspection_cam_infos = readMainbladesCameras(path, "transforms_inspection.json", white_background)
-    custom_path_info = readCustomPath(path, "custom_path", white_background)
+    custom_path_info = readCustomPath(path, "custom_path.json", white_background)
     print(f'done reading cameras')
 
     if eval:
