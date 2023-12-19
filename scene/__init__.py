@@ -29,6 +29,7 @@ class Scene:
         self.model_path = args.model_path
         self.loaded_iter = None
         self.gaussians = gaussians
+        self.source_path = args.source_path
 
         if load_iteration:
             if load_iteration == -1:
@@ -39,6 +40,7 @@ class Scene:
 
         self.train_cameras = {}
         self.test_cameras = {}
+        self.custom_cameras = {}
 
         if os.path.exists(os.path.join(args.source_path, "sparse")):
             scene_info = sceneLoadTypeCallbacks["Colmap"](args.source_path, args.images, args.eval)
@@ -49,6 +51,7 @@ class Scene:
 
             # load whatever kind of data you have
             scene_info = sceneLoadTypeCallbacks["Mainblades"](args.source_path, args.white_background, args.images, args.eval)
+
         else:
             assert False, "Could not recognize scene type!"
 
@@ -61,6 +64,8 @@ class Scene:
                 camlist.extend(scene_info.test_cameras)
             if scene_info.train_cameras:
                 camlist.extend(scene_info.train_cameras)
+            if scene_info.custom_cameras:
+                camlist.extend(scene_info.custom_cameras)
             for id, cam in enumerate(camlist):
                 json_cams.append(camera_to_JSON(id, cam))
             with open(os.path.join(self.model_path, "cameras.json"), 'w') as file:
@@ -69,6 +74,7 @@ class Scene:
         if shuffle:
             random.shuffle(scene_info.train_cameras)  # Multi-res consistent random shuffling
             random.shuffle(scene_info.test_cameras)  # Multi-res consistent random shuffling
+            random.shuffle(scene_info.custom_cameras)
 
         self.cameras_extent = scene_info.nerf_normalization["radius"]
 
@@ -77,6 +83,8 @@ class Scene:
             self.train_cameras[resolution_scale] = cameraList_from_camInfos(scene_info.train_cameras, resolution_scale, args)
             print("Loading Test Cameras")
             self.test_cameras[resolution_scale] = cameraList_from_camInfos(scene_info.test_cameras, resolution_scale, args)
+            print("Loading Custom Cameras")
+            self.custom_cameras[resolution_scale] = cameraList_from_camInfos(scene_info.custom_cameras, resolution_scale, args)
 
         if self.loaded_iter:
             self.gaussians.load_ply(os.path.join(self.model_path,
@@ -95,3 +103,6 @@ class Scene:
 
     def getTestCameras(self, scale=1.0):
         return self.test_cameras[scale]
+
+    def getCustomCameras(self, scale=1.0):
+        return self.custom_cameras[scale]

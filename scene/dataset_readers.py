@@ -337,6 +337,38 @@ def readMainbladesCameras(path, transformsfile, white_background):
 
     return cam_infos
 
+def readCustomPath(path, camerafile, white_background):
+    cam_infos = []
+
+    with open(os.path.join(path, camerafile)) as json_file:
+        contents = json.load(json_file)
+        focal_length_x = contents["fl_x"]
+        focal_length_y = contents["fl_y"]
+        width = contents["render_width"]
+        height = contents["render_height"]
+        FovY = focal2fov(focal_length_y, height)
+        FovX = focal2fov(focal_length_x, width)
+
+        path = contents["camera_path"]
+
+        for idx, cam in enumerate(path):
+
+            # NeRF 'transform_matrix' is a camera-to-world transform
+            # print(f'cam_name: {cam_name}')
+            c2w = np.array(cam["camera_to_world"])
+            # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
+            c2w[:3, 1:3] *= -1
+
+            # get the world-to-camera transform and set R, T
+            w2c = np.linalg.inv(c2w)
+            R = np.transpose(w2c[:3, :3])  # R is stored transposed due to 'glm' in CUDA code
+            T = w2c[:3, 3]
+
+            cam_infos.append(CameraInfo(uid=idx, R=R, T=T, FovY=FovY, FovX=FovX, image=None,
+                                        image_path=None, image_name=None, width=width,
+                                        height=height))
+
+    return cam_infos
 
 def readInspectionInfo(path, white_background, eval, images, llffhold=8):
     # `1. load cameras
@@ -346,6 +378,7 @@ def readInspectionInfo(path, white_background, eval, images, llffhold=8):
     reading_dir = 'images' if images == None else images
     print(f'readMainbladesCameras')
     inspection_cam_infos = readMainbladesCameras(path, "transforms_inspection.json", white_background)
+    custom_path_info = readCustomPath(path, "custom_path", white_background)
     print(f'done reading cameras')
 
     if eval:
@@ -368,6 +401,7 @@ def readInspectionInfo(path, white_background, eval, images, llffhold=8):
     scene_info = SceneInfo(point_cloud=pcd,
                            train_cameras=train_cam_infos,
                            test_cameras=test_cam_infos,
+                           custom_path_info=custom_path_info,
                            nerf_normalization=nerf_normalization,
                            ply_path=ply_path)
     return scene_info
