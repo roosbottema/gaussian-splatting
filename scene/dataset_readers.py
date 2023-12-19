@@ -42,6 +42,7 @@ class SceneInfo(NamedTuple):
     point_cloud: BasicPointCloud
     train_cameras: list
     test_cameras: list
+    custom_path_info: list
     nerf_normalization: dict
     ply_path: str
 
@@ -197,6 +198,7 @@ def readColmapSceneInfo(path, images, eval, llffhold=8):
     scene_info = SceneInfo(point_cloud=pcd,
                            train_cameras=train_cam_infos,
                            test_cameras=test_cam_infos,
+                           custom_path_info=None,
                            nerf_normalization=nerf_normalization,
                            ply_path=ply_path)
     return scene_info
@@ -278,6 +280,7 @@ def readNerfSyntheticInfo(path, white_background, eval, extension=".png"):
     scene_info = SceneInfo(point_cloud=pcd,
                            train_cameras=train_cam_infos,
                            test_cameras=test_cam_infos,
+                           custom_path_info=None,
                            nerf_normalization=nerf_normalization,
                            ply_path=ply_path)
     return scene_info
@@ -354,12 +357,8 @@ def readCustomPath(path, camerafile, white_background):
             # print(f'cam_name: {cam_name}')
             cam_to_world = np.array(cam["camera_to_world"])
             print(f'cam to world: {cam_to_world}')
-            transform_matrix = []
-            for i in range(0,4):
-                list = cam_to_world[i: i+4]
-                print(f'list; {list}')
-                transform_matrix.append(list)
-                print(f'transform matrix {transform_matrix}')
+            transform_matrix = np.resize(cam_to_world, (4,4))
+            print(f'transform matrix: {transform_matrix}')
 
             c2w = np.array(transform_matrix)
             print(c2w)
