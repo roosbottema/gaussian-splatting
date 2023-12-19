@@ -342,12 +342,9 @@ def readCustomPath(path, camerafile, white_background):
 
     with open(os.path.join(path, camerafile)) as json_file:
         contents = json.load(json_file)
-        focal_length_x = contents["fl_x"]
-        focal_length_y = contents["fl_y"]
         width = contents["render_width"]
         height = contents["render_height"]
-        FovY = focal2fov(focal_length_y, height)
-        FovX = focal2fov(focal_length_x, width)
+
 
         path = contents["camera_path"]
 
@@ -363,6 +360,9 @@ def readCustomPath(path, camerafile, white_background):
             w2c = np.linalg.inv(c2w)
             R = np.transpose(w2c[:3, :3])  # R is stored transposed due to 'glm' in CUDA code
             T = w2c[:3, 3]
+
+            FovX = cam["fov"]
+            FovY = cam["fov"]
 
             cam_infos.append(CameraInfo(uid=idx, R=R, T=T, FovY=FovY, FovX=FovX, image=None,
                                         image_path=None, image_name=None, width=width,
