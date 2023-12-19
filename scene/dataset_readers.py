@@ -359,7 +359,7 @@ def readCustomPath(path, camerafile, white_background):
             transform_matrix = np.resize(cam_to_world, (4,4))
 
             c2w = np.array(transform_matrix)
-            print(c2w)
+            
             # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
             c2w[:3, 1:3] *= -1
 
