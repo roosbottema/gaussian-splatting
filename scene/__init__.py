@@ -41,6 +41,7 @@ class Scene:
         self.train_cameras = {}
         self.test_cameras = {}
         self.custom_cameras = {}
+        print(f'custom cameras dict created: {self.custom_cameras}')
 
         if os.path.exists(os.path.join(args.source_path, "sparse")):
             scene_info = sceneLoadTypeCallbacks["Colmap"](args.source_path, args.images, args.eval)
