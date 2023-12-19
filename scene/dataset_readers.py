@@ -42,7 +42,7 @@ class SceneInfo(NamedTuple):
     point_cloud: BasicPointCloud
     train_cameras: list
     test_cameras: list
-    custom_path_info: list
+    custom_cameras: list
     nerf_normalization: dict
     ply_path: str
 
@@ -198,7 +198,7 @@ def readColmapSceneInfo(path, images, eval, llffhold=8):
     scene_info = SceneInfo(point_cloud=pcd,
                            train_cameras=train_cam_infos,
                            test_cameras=test_cam_infos,
-                           custom_path_info=None,
+                           custom_cameras=None,
                            nerf_normalization=nerf_normalization,
                            ply_path=ply_path)
     return scene_info
@@ -280,7 +280,7 @@ def readNerfSyntheticInfo(path, white_background, eval, extension=".png"):
     scene_info = SceneInfo(point_cloud=pcd,
                            train_cameras=train_cam_infos,
                            test_cameras=test_cam_infos,
-                           custom_path_info=None,
+                           custom_cameras=None,
                            nerf_normalization=nerf_normalization,
                            ply_path=ply_path)
     return scene_info
@@ -359,7 +359,7 @@ def readCustomPath(path, camerafile, white_background):
             transform_matrix = np.resize(cam_to_world, (4,4))
 
             c2w = np.array(transform_matrix)
-            
+
             # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
             c2w[:3, 1:3] *= -1
 
@@ -409,7 +409,7 @@ def readInspectionInfo(path, white_background, eval, images, llffhold=8):
     scene_info = SceneInfo(point_cloud=pcd,
                            train_cameras=train_cam_infos,
                            test_cameras=test_cam_infos,
-                           custom_path_info=custom_path_info,
+                           custom_cameras=custom_path_info,
                            nerf_normalization=nerf_normalization,
                            ply_path=ply_path)
     return scene_info
