@@ -36,7 +36,7 @@ class Camera(nn.Module):
             print(f"[Warning] Custom device {data_device} failed, fallback to default cuda device" )
             self.data_device = torch.device("cuda")
 
-        if not image == None:
+        if not image_name == None:
 
             self.original_image = image.clamp(0.0, 1.0).to(self.data_device)
             self.image_width = self.original_image.shape[2]
@@ -49,7 +49,7 @@ class Camera(nn.Module):
 
         else:
             self.image_width = image.size
-            self.image_height = image.size 
+            self.image_height = image.size
 
         self.zfar = 100.0
         self.znear = 0.01
