@@ -57,7 +57,7 @@ def loadCustomCam(args, id, cam_info, resolution_scale):
 
     return Camera(colmap_id=cam_info.uid, R=cam_info.R, T=cam_info.T,
                   FoVx=cam_info.FovX, FoVy=cam_info.FovY,
-                  image=None, gt_alpha_mask=None,
+                  image=np.zeros(orig_h), gt_alpha_mask=None,
                   image_name=None,
                   uid=id, data_device=args.data_device)
 
