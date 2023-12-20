@@ -75,7 +75,7 @@ if __name__ == "__main__":
     parser.add_argument("--quiet", action="store_true")
 
     #Try to add my own path rendere
-    parser.add_argument("--custom_path", action="store_true")
+    parser.add_argument("--custom_path", default=False, type=bool)
 
     args = get_combined_args(parser)
     print("Rendering " + args.model_path)
