@@ -345,31 +345,23 @@ def readCustomPath(path, camerafile, white_background):
 
     with open(os.path.join(path, camerafile)) as json_file:
         contents = json.load(json_file)
-        width = contents["render_width"]
-        height = contents["render_height"]
+        width = contents["w"]
+        height = contents["h"]
+        focal_length_x = 8093.47125
+        focal_length_y = 8086.42372
+        FovY = focal2fov(focal_length_y, height)
+        FovX = focal2fov(focal_length_x, width)
 
 
-        path = contents["camera_path"]
+        path = contents["frames"]
 
-        for idx, cam in enumerate(path):
-
-
-            cam_to_world = np.array(cam["camera_to_world"])
-
-            transform_matrix = np.resize(cam_to_world, (4,4))
-
-            c2w = np.array(transform_matrix)
-
-            # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
+        for idx, frame in enumerate(path):
+            c2w = np.array(frame["transform_matrix"])
             c2w[:3, 1:3] *= -1
-
-            # get the world-to-camera transform and set R, T
             w2c = np.linalg.inv(c2w)
-            R = np.transpose(w2c[:3, :3])  # R is stored transposed due to 'glm' in CUDA code
+            R = np.transpose(w2c[:3, :3])
             T = w2c[:3, 3]
 
-            FovX = cam["fov"]
-            FovY = cam["fov"]
 
             cam_infos.append(CameraInfo(uid=idx, R=R, T=T, FovY=FovY, FovX=FovX, image=None,
                                         image_path=None, image_name=None, width=width,
