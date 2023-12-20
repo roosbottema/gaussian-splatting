@@ -51,11 +51,27 @@ def loadCam(args, id, cam_info, resolution_scale):
                   image=gt_image, gt_alpha_mask=loaded_mask,
                   image_name=cam_info.image_name, uid=id, data_device=args.data_device)
 
+def loadCustomCam(args, id, cam_info, resolution_scale):
+    orig_w = cam_info.width
+    orig_h = cam_info.height
+
+    return Camera(colmap_id=cam_info.uid, R=cam_info.R, T=cam_info.T,
+                  FoVx=cam_info.FovX, FoVy=cam_info.FovY,
+                  uid=id, data_device=args.data_device)
+
 def cameraList_from_camInfos(cam_infos, resolution_scale, args):
     camera_list = []
 
     for id, c in enumerate(cam_infos):
         camera_list.append(loadCam(args, id, c, resolution_scale))
+
+    return camera_list
+
+def cameraList_from_camInfos_custom(cam_infos, resolution_scale, args):
+    camera_list = []
+
+    for id, c in enumerate(cam_infos):
+        camera_list.append(loadCustomCam(args, id, c, resolution_scale))
 
     return camera_list
 
