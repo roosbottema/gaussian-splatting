@@ -109,10 +109,12 @@ class GaussianModel:
         return self._xyz
 
     def get_original_xyz(self):
-        return np.asarray(self._original_position)
+        np_array = self._original_position.detach().cpu().numpy()
+        return np_array
 
     def get_xyz_array(self):
-        return np.asarray(self._xyz)
+        np_array = self._xyz.detach().cpu().numpy()
+        return np_array
     @property
     def get_features(self):
         features_dc = self._features_dc
