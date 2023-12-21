@@ -32,7 +32,7 @@ except ImportError:
 
 dev = "cuda:1"
 
-def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_iterations, checkpoint, debug_from):
+def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_iterations, checkpoint, debug_from, position_loss_alpha, positional_loss_iter):
     first_iter = 0
     tb_writer = prepare_output_and_logger(dataset)
     gaussians = GaussianModel(dataset.sh_degree)
@@ -96,7 +96,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         Ll1 = l1_loss(image, gt_image)
 
 
-        if iteration % 500 == 0:
+        if iteration % positional_loss_iter == 0:
 
             original_points = o3d.utility.Vector3dVector(gaussians.get_original_xyz())
             original_pcd = o3d.geometry.PointCloud(points=original_points)
@@ -106,7 +106,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
             dists = np.asarray(dists)
             dist_norm = np.linalg.norm(dists)
 
-        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + 0.001 * dist_norm #add loss position
+        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + position_loss_alpha * dist_norm #add loss position
         print(f'loss: {loss.size()}')
         print(f'type of the loss {type(loss)}')
 
@@ -228,6 +228,8 @@ if __name__ == "__main__":
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default = None)
+    parser.add_argument("--positional_loss_alpha", type=float, default=0.01)
+    parser.add_argument("--positional_loss_iter", type=int, default=100)
     args = parser.parse_args(sys.argv[1:])
     args.save_iterations.append(args.iterations)
     
@@ -239,7 +241,7 @@ if __name__ == "__main__":
     # Start GUI server, configure and run training
     network_gui.init(args.ip, args.port)
     torch.autograd.set_detect_anomaly(args.detect_anomaly)
-    training(lp.extract(args), op.extract(args), pp.extract(args), args.test_iterations, args.save_iterations, args.checkpoint_iterations, args.start_checkpoint, args.debug_from)
+    training(lp.extract(args), op.extract(args), pp.extract(args), args.test_iterations, args.save_iterations, args.checkpoint_iterations, args.start_checkpoint, args.debug_from, args.positional_loss_alpha, args.positional_loss_iter)
 
     # All done
     print("\nTraining complete.")
