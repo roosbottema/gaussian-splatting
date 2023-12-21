@@ -38,6 +38,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
     gaussians = GaussianModel(dataset.sh_degree)
     scene = Scene(dataset, gaussians)
     gaussians.training_setup(opt)
+    dist_norm = 0
     if checkpoint:
         (model_params, first_iter) = torch.load(checkpoint)
         gaussians.restore(model_params, opt)
@@ -94,13 +95,16 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         gt_image = viewpoint_cam.original_image.cuda()
         Ll1 = l1_loss(image, gt_image)
 
-        original_points = o3d.utility.Vector3dVector(gaussians.get_original_xyz())
-        original_pcd = o3d.geometry.PointCloud(points=original_points)
-        current_points = o3d.utility.Vector3dVector(gaussians.get_xyz_array())
-        current_pcd = o3d.geometry.PointCloud(points=current_points)
-        dists = original_pcd.compute_point_cloud_distance(current_pcd)
-        dists = np.asarray(dists)
-        dist_norm = np.linalg.norm(dists)
+
+        if iteration % 500 == 0:
+
+            original_points = o3d.utility.Vector3dVector(gaussians.get_original_xyz())
+            original_pcd = o3d.geometry.PointCloud(points=original_points)
+            current_points = o3d.utility.Vector3dVector(gaussians.get_xyz_array())
+            current_pcd = o3d.geometry.PointCloud(points=current_points)
+            dists = original_pcd.compute_point_cloud_distance(current_pcd)
+            dists = np.asarray(dists)
+            dist_norm = np.linalg.norm(dists)
 
         loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + 0.001 * dist_norm #add loss position
         print(f'loss: {loss.size()}')
