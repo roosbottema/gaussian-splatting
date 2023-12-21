@@ -47,6 +47,7 @@ class GaussianModel:
         self.active_sh_degree = 0
         self.max_sh_degree = sh_degree  
         self._xyz = torch.empty(0)
+        self._original_position = torch.empty(0)
         self._features_dc = torch.empty(0)
         self._features_rest = torch.empty(0)
         self._scaling = torch.empty(0)
@@ -140,13 +141,15 @@ class GaussianModel:
 
         opacities = inverse_sigmoid(0.1 * torch.ones((fused_point_cloud.shape[0], 1), dtype=torch.float, device=dev))
 
-        self._xyz = nn.Parameter(fused_point_cloud.requires_grad_(True)) #turn to FALSE
+        self._xyz = nn.Parameter(fused_point_cloud.requires_grad_(False)) #turn to FALSE
         self._features_dc = nn.Parameter(features[:,:,0:1].transpose(1, 2).contiguous().requires_grad_(True))
         self._features_rest = nn.Parameter(features[:,:,1:].transpose(1, 2).contiguous().requires_grad_(True))
         self._scaling = nn.Parameter(scales.requires_grad_(True))
         self._rotation = nn.Parameter(rots.requires_grad_(True))
         self._opacity = nn.Parameter(opacities.requires_grad_(True))
         self.max_radii2D = torch.zeros((self.get_xyz.shape[0]), device=dev)
+
+        self._original_position = nn.Parameter(fused_point_cloud.requires_grad_(False))
 
     def training_setup(self, training_args):
         self.percent_dense = training_args.percent_dense
