@@ -14,6 +14,8 @@ import torch
 from random import randint
 from utils.loss_utils import l1_loss, ssim
 from gaussian_renderer import render, network_gui
+import open3d as o3d
+import numpy as np
 import sys
 from scene import Scene, GaussianModel
 from utils.general_utils import safe_state
@@ -91,8 +93,16 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         # Loss
         gt_image = viewpoint_cam.original_image.cuda()
         Ll1 = l1_loss(image, gt_image)
-        print(f'Ll1 loss: {Ll1}')
-        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) #add loss position
+
+        original_points = o3d.utility.Vector3dVector(gaussians.get_original_xyz())
+        original_pcd = o3d.geometry.PointCloud(points=original_points)
+        current_points = o3d.utility.Vector3dVector(gaussians.get_xyz_array())
+        current_pcd = o3d.geometry.PointCloud(points=current_points)
+        dists = original_pcd.compute_point_cloud_distance(current_pcd)
+        dists = np.asarray(dists)
+        dist_norm = np.linalg.norm(dists)
+
+        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + 0.001 * dist_norm #add loss position
         print(f'loss: {loss.size()}')
         print(f'type of the loss {type(loss)}')
 

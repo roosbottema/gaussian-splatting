@@ -12,6 +12,7 @@
 import torch
 import numpy as np
 from utils.general_utils import inverse_sigmoid, get_expon_lr_func, build_rotation
+import open3d as o3d
 from torch import nn
 import os
 from utils.system_utils import mkdir_p
@@ -106,7 +107,12 @@ class GaussianModel:
     @property
     def get_xyz(self):
         return self._xyz
-    
+
+    def get_original_xyz(self):
+        return np.asarray(self._original_position)
+
+    def get_xyz_array(self):
+        return np.asarray(self._xyz)
     @property
     def get_features(self):
         features_dc = self._features_dc
