@@ -96,15 +96,25 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         Ll1 = l1_loss(image, gt_image)
 
 
-        if iteration % positional_loss_iter == 0:
+        # if iteration % positional_loss_iter == 0:
+        #
+        #     original_points = o3d.utility.Vector3dVector(gaussians.get_original_xyz())
+        #     original_pcd = o3d.geometry.PointCloud(points=original_points)
+        #     current_points = o3d.utility.Vector3dVector(gaussians.get_xyz_array())
+        #     current_pcd = o3d.geometry.PointCloud(points=current_points)
+        #     dists = original_pcd.compute_point_cloud_distance(current_pcd)
+        #     dists = np.asarray(dists)
+        #     dist_norm = np.linalg.norm(dists)
 
-            original_points = o3d.utility.Vector3dVector(gaussians.get_original_xyz())
-            original_pcd = o3d.geometry.PointCloud(points=original_points)
-            current_points = o3d.utility.Vector3dVector(gaussians.get_xyz_array())
-            current_pcd = o3d.geometry.PointCloud(points=current_points)
-            dists = original_pcd.compute_point_cloud_distance(current_pcd)
-            dists = np.asarray(dists)
-            dist_norm = np.linalg.norm(dists)
+        if iteration % positional_loss_iter == 0:
+            distance_array = []
+            original_points = gaussians.get_original_xyz()
+            current_points = gaussians.get_xyz_array()
+            for point in current_points:
+                distances = np.linalg.norm(original_points - point, axis=1)
+                min_distance = np.min(distances)
+                distance_array.append(min_distance)
+            dist_norm = np.linalg.norm(distance_array)
 
         loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + position_loss_alpha * dist_norm #add loss position
         print(f'loss: {loss.size()}')
