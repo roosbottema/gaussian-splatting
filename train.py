@@ -30,7 +30,7 @@ try:
 except ImportError:
     TENSORBOARD_FOUND = False
 
-dev = "cuda:0"
+dev = "cuda:1"
 
 def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_iterations, checkpoint, debug_from, position_loss_alpha, positional_loss_iter):
     first_iter = 0
