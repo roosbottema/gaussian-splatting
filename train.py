@@ -107,17 +107,18 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         #     dists = np.asarray(dists)
         #     dist_norm = np.linalg.norm(dists)
 
-        if iteration % positional_loss_iter == 0:
-            distance_array = []
-            original_points = gaussians.get_original_xyz()
-            current_points = gaussians.get_xyz_array()
-            for point in current_points:
-                distances = np.linalg.norm(original_points - point, axis=1)
-                min_distance = np.min(distances)
-                distance_array.append(min_distance)
-            dist_norm = np.linalg.norm(distance_array)
+        # if iteration % positional_loss_iter == 0:
+        #     distance_array = []
+        #     original_points = gaussians.get_original_xyz()
+        #     current_points = gaussians.get_xyz_array()
+        #     for point in current_points:
+        #         distances = np.linalg.norm(original_points - point, axis=1)
+        #         min_distance = np.min(distances)
+        #         distance_array.append(min_distance)
+        #     dist_norm = np.linalg.norm(distance_array)
 
-        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + position_loss_alpha * dist_norm #add loss position
+        # loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + position_loss_alpha * dist_norm #add loss position
+        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image))
         print(f'loss: {loss.size()}')
         print(f'type of the loss {type(loss)}')
 
