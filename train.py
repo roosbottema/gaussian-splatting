@@ -30,13 +30,14 @@ try:
 except ImportError:
     TENSORBOARD_FOUND = False
 
-dev = "cuda:1"
+dev = "cuda:0"
 
 def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoint_iterations, checkpoint, debug_from, position_loss_alpha, positional_loss_iter):
     first_iter = 0
     tb_writer = prepare_output_and_logger(dataset)
     gaussians = GaussianModel(dataset.sh_degree)
     scene = Scene(dataset, gaussians)
+    
     gaussians.training_setup(opt)
     dist_norm = 0
     if checkpoint:
